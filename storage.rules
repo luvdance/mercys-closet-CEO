@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Match all image files under your app's public images path
+    // The `appId` variable is dynamically provided by the Canvas environment.
+    // For local testing, you might use 'default-app-id' or your actual project ID.
+    match /artifacts/{appId}/public/images/{category}/{fileName} {
+      allow read: if true; // Anyone can read image files
+      allow write: if request.auth != null; // Only authenticated users can upload
+    }
+
+    // You can keep or remove any other default rules that might be there,
+    // but ensure the above rule is present and correct.
+  }
+}
