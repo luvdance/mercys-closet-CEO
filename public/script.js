@@ -1,183 +1,238 @@
-//Firebase SDKs
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+// --- Firebase SDK Imports ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+// --- Firebase Configuration ---
+// IMPORTANT: These variables (firebaseConfig, appId) are now expected to be
+// defined globally in your HTML <script> tag BEFORE this module is loaded.
+// This ensures the correct configuration is used when deployed to Firebase Hosting.
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
+// Initialize Firebase app
+// Ensure firebaseConfig is accessible globally from the HTML
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app); // Get Auth instance
+const storage = getStorage(app); // Get Storage instance
+const db = getFirestore(app); // Get Firestore instance
 
-        // DOM Elements
-        const loginSection = document.getElementById('loginSection');
-        const uploadSection = document.getElementById('uploadSection');
-        const loginForm = document.getElementById('loginForm');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const loginMessage = document.getElementById('loginMessage');
-        const logoutBtn = document.getElementById('logoutBtn');
+// --- DOM Elements ---
+const loginSection = document.getElementById('loginSection');
+const uploadSection = document.getElementById('uploadSection');
+const loginForm = document.getElementById('loginForm');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const loginMessage = document.getElementById('loginMessage');
+const logoutBtn = document.getElementById('logoutBtn');
 
-        const uploadForm = document.getElementById('uploadForm');
-        const productImageInput = document.getElementById('productImage');
-        const productNameInput = document.getElementById('productName');
-        const productCategorySelect = document.getElementById('productCategory');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const uploadMessage = document.getElementById('uploadMessage');
-        const uploadSpinner = document.getElementById('uploadSpinner');
-        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+const uploadForm = document.getElementById('uploadForm');
+const productImageInput = document.getElementById('productImage');
+const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+const productNameInput = document.getElementById('productName');
+const productCategorySelect = document.getElementById('productCategory');
+const uploadBtn = document.getElementById('uploadBtn');
+const uploadMessage = document.getElementById('uploadMessage');
+const uploadSpinner = document.getElementById('uploadSpinner');
 
-        let currentUser = null; // To store the authenticated user
+// --- Helper Functions for UI Messages ---
 
-        // --- Utility Functions ---
-        function showMessage(element, message, type) {
-            element.textContent = message;
-            element.className = `alert mt-3 ${type === 'success' ? 'alert-success' : 'alert-danger'}`;
-            element.classList.remove('d-none');
-            setTimeout(() => {
-                element.classList.add('d-none');
-            }, 5000); // Hide after 5 seconds
+/**
+ * Displays a message in the specified message element.
+ * @param {HTMLElement} element The HTML element to display the message in.
+ * @param {string} message The message text.
+ * @param {string} type Bootstrap alert type (e.g., 'success', 'danger', 'info').
+ */
+function showMessage(element, message, type) {
+    element.textContent = message;
+    element.className = `alert mt-3 ${type === 'success' ? 'alert-success' : 'alert-danger'}`;
+    element.classList.remove('d-none');
+}
+
+/**
+ * Hides the specified message element.
+ * @param {HTMLElement} element The HTML element to hide.
+ */
+function hideMessage(element) {
+    element.classList.add('d-none');
+}
+
+/**
+ * Shows the loading spinner and disables the upload button.
+ */
+function showSpinner() {
+    uploadSpinner.classList.remove('d-none');
+    uploadBtn.disabled = true;
+}
+
+/**
+ * Hides the loading spinner and enables the upload button.
+ */
+function hideSpinner() {
+    uploadSpinner.classList.add('d-none');
+    uploadBtn.disabled = false;
+}
+
+// --- Authentication Logic ---
+
+/**
+ * Handles user login with email and password.
+ * @param {Event} e The form submission event.
+ */
+async function handleLogin(e) {
+    e.preventDefault();
+    hideMessage(loginMessage); // Clear previous messages
+
+    const email = emailInput.value;
+    const password = passwordInput.value;
+
+    try {
+        // Attempt to sign in with email and password
+        await signInWithEmailAndPassword(auth, email, password);
+        // onAuthStateChanged listener will handle UI update on successful login
+        showMessage(loginMessage, 'Login successful!', 'success');
+        loginForm.reset(); // Clear form fields
+    } catch (error) {
+        console.error("Login error:", error.code, error.message);
+        let errorMessage = "Login failed. Please check your credentials.";
+        if (error.code === 'auth/user-not-found') {
+            errorMessage = "No user found with this email.";
+        } else if (error.code === 'auth/wrong-password') {
+            errorMessage = "Incorrect password.";
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = "Invalid email address format.";
+        } else if (error.code === 'auth/too-many-requests') {
+            errorMessage = "Too many failed login attempts. Please try again later.";
         }
+        showMessage(loginMessage, errorMessage, 'danger');
+    }
+}
 
-        function showSpinner(show) {
-            uploadSpinner.style.display = show ? 'block' : 'none';
-            uploadBtn.disabled = show;
-        }
+/**
+ * Handles user logout.
+ */
+async function handleLogout() {
+    try {
+        await signOut(auth);
+        // onAuthStateChanged listener will handle UI update on successful logout
+        showMessage(loginMessage, 'Logged out successfully.', 'info');
+    } catch (error) {
+        console.error("Logout error:", error.message);
+        showMessage(loginMessage, 'Failed to log out.', 'danger');
+    }
+}
 
-        // --- Authentication Logic ---
-        // Listen for auth state changes
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                loginSection.classList.add('d-none');
-                uploadSection.classList.remove('d-none');
-                console.log("User is signed in:", user.uid);
-            } else {
-                currentUser = null;
-                loginSection.classList.remove('d-none');
-                uploadSection.classList.add('d-none');
-                console.log("No user is signed in.");
-                // Try to sign in anonymously if no custom token is available
-                if (!initialAuthToken) {
-                    try {
-                        await signInAnonymously(auth);
-                        console.log("Signed in anonymously.");
-                    } catch (error) {
-                        console.error("Error signing in anonymously:", error);
-                        showMessage(loginMessage, `Authentication failed: ${error.message}`, 'danger');
-                    }
-                }
-            }
+// --- Product Upload Logic ---
+
+/**
+ * Handles product image preview.
+ */
+function handleImagePreview() {
+    imagePreviewContainer.innerHTML = '<span class="text-muted">Image preview will appear here</span>'; // Clear previous preview
+    const file = productImageInput.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreviewContainer.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded shadow-sm mt-2" alt="Product Preview">`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+/**
+ * Handles product upload to Firebase Storage and Firestore.
+ * @param {Event} e The form submission event.
+ */
+async function handleUpload(e) {
+    e.preventDefault();
+    hideMessage(uploadMessage); // Clear previous messages
+    showSpinner(); // Show loading spinner
+
+    const imageFile = productImageInput.files[0];
+    const productName = productNameInput.value;
+    const productCategory = productCategorySelect.value;
+
+    if (!imageFile || !productName || !productCategory) {
+        showMessage(uploadMessage, 'Please fill in all fields and select an image.', 'danger');
+        hideSpinner();
+        return;
+    }
+
+    try {
+        // 1. Upload image to Firebase Storage
+        // Use the globally available 'appId' from the HTML
+        const storageRef = ref(storage, `artifacts/${appId}/public/images/${productCategory}/${imageFile.name}`);
+        const uploadTask = await uploadBytes(storageRef, imageFile);
+        const imageUrl = await getDownloadURL(uploadTask.ref);
+
+        console.log("Image uploaded to Storage:", imageUrl);
+
+        // 2. Save product data to Firestore
+        // Use the globally available 'appId' from the HTML
+        const productsCollectionRef = collection(db, `artifacts/${appId}/public/data/products`);
+        await addDoc(productsCollectionRef, {
+            name: productName,
+            category: productCategory,
+            imageUrl: imageUrl,
+            timestamp: serverTimestamp() // Add a server-generated timestamp
         });
 
-        // Attempt to sign in with custom token if available
-        if (initialAuthToken) {
-            signInWithCustomToken(auth, initialAuthToken)
-                .then(() => {
-                    console.log("Signed in with custom token.");
-                })
-                .catch((error) => {
-                    console.error("Error signing in with custom token:", error);
-                    showMessage(loginMessage, `Authentication failed: ${error.message}`, 'danger');
-                });
+        showMessage(uploadMessage, 'Product uploaded successfully!', 'success');
+        uploadForm.reset(); // Clear form fields
+        imagePreviewContainer.innerHTML = '<span class="text-muted">Image preview will appear here</span>'; // Clear image preview
+        console.log("Product data saved to Firestore.");
+
+    } catch (error) {
+        console.error("Upload error:", error);
+        showMessage(uploadMessage, `Failed to upload product: ${error.message}`, 'danger');
+    } finally {
+        hideSpinner(); // Hide spinner regardless of success or failure
+    }
+}
+
+// --- Event Listeners ---
+
+document.addEventListener('DOMContentLoaded', () => {
+    // onAuthStateChanged listener: determines which section to show (login or upload)
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // User is signed in
+            loginSection.classList.add('d-none');
+            uploadSection.classList.remove('d-none');
+            hideMessage(loginMessage); // Hide any login error messages
+            console.log("User is logged in:", user.email);
         } else {
-            // If no initialAuthToken, onAuthStateChanged will handle anonymous sign-in
-            console.warn("No __initial_auth_token found. Attempting anonymous sign-in.");
+            // User is signed out
+            loginSection.classList.remove('d-none');
+            uploadSection.classList.add('d-none');
+            console.log("User is logged out.");
         }
+    });
 
+    // Attach form submission and button click listeners
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    } else {
+        console.warn("Login form with ID 'loginForm' not found.");
+    }
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = emailInput.value;
-            const password = passwordInput.value;
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+    } else {
+        console.warn("Logout button with ID 'logoutBtn' not found.");
+    }
 
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                showMessage(loginMessage, 'Login successful!', 'success');
-                // UI state will be handled by onAuthStateChanged
-            } catch (error) {
-                showMessage(loginMessage, `Login failed: ${error.message}`, 'danger');
-                console.error("Login error:", error);
-            }
-        });
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', handleUpload);
+    } else {
+        console.warn("Upload form with ID 'uploadForm' not found.");
+    }
 
-        logoutBtn.addEventListener('click', async () => {
-            try {
-                await signOut(auth);
-                showMessage(loginMessage, 'Logged out successfully!', 'success');
-                // UI state will be handled by onAuthStateChanged
-            } catch (error) {
-                showMessage(uploadMessage, `Logout failed: ${error.message}`, 'danger');
-                console.error("Logout error:", error);
-            }
-        });
+    if (productImageInput) {
+        productImageInput.addEventListener('change', handleImagePreview);
+    } else {
+        console.warn("Product image input with ID 'productImage' not found.");
+    }
 
-        // --- Image Preview Logic ---
-        productImageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    imagePreviewContainer.innerHTML = `<img src="${event.target.result}" alt="Product Preview" class="image-preview">`;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                imagePreviewContainer.innerHTML = `<span class="text-muted">Image preview will appear here</span>`;
-            }
-        });
-
-        // --- Product Upload Logic ---
-        uploadForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentUser) {
-                showMessage(uploadMessage, 'You must be logged in to upload products.', 'danger');
-                return;
-            }
-
-            const imageFile = productImageInput.files[0];
-            const productName = productNameInput.value.trim();
-            const productCategory = productCategorySelect.value;
-
-            if (!imageFile || !productName || !productCategory) {
-                showMessage(uploadMessage, 'Please fill in all fields and select an image.', 'danger');
-                return;
-            }
-
-            showSpinner(true);
-            uploadMessage.classList.add('d-none'); // Hide previous messages
-
-            try {
-                // 1. Upload image to Firebase Storage
-                const storagePath = `artifacts/${appId}/public/images/${productCategory}/${imageFile.name}_${Date.now()}`;
-                const imageRef = ref(storage, storagePath);
-                const uploadResult = await uploadBytes(imageRef, imageFile);
-                const imageUrl = await getDownloadURL(uploadResult.ref);
-
-                // 2. Save product data to Firestore
-                const productsCollectionRef = collection(db, `artifacts/${appId}/public/data/products`);
-                await addDoc(productsCollectionRef, {
-                    name: productName,
-                    category: productCategory,
-                    imageUrl: imageUrl,
-                    timestamp: serverTimestamp(), // Useful for ordering products
-                    uploadedBy: currentUser.uid // Track who uploaded it
-                });
-
-                showMessage(uploadMessage, 'Product uploaded successfully!', 'success');
-                uploadForm.reset(); // Clear the form
-                imagePreviewContainer.innerHTML = `<span class="text-muted">Image preview will appear here</span>`; // Clear preview
-                console.log("Product uploaded:", { productName, productCategory, imageUrl });
-
-            } catch (error) {
-                showMessage(uploadMessage, `Upload failed: ${error.message}`, 'danger');
-                console.error("Upload error:", error);
-            } finally {
-                showSpinner(false);
-            }
-        });
+    // Hide spinner initially
+    hideSpinner();
+});
