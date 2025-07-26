@@ -6,12 +6,12 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } f
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY", // Replace with your actual API Key
-    authDomain: "YOUR_AUTH_DOMAIN", // Replace with your actual Auth Domain
-    projectId: "YOUR_PROJECT_ID", // Replace with your actual Project ID
-    storageBucket: "YOUR_STORAGE_BUCKET", // Replace with your actual Storage Bucket
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your actual Messaging Sender ID
-    appId: "YOUR_APP_ID" // Replace with your actual App ID
+    apiKey: "AIzaSyA3tUEHVe_y8BQ_3_16YsKlokc10qDox-8",
+    authDomain: "mercy-s-closet-ceo-app.firebaseapp.com",
+    projectId: "mercy-s-closet-ceo-app",
+    storageBucket: "mercy-s-closet-ceo-app.appspot.com",
+    messagingSenderId: "102114420195",
+    appId: "1:102114420195:web:af33297eab51e9c0032cd6"
 };
 
 // Initialize Firebase
