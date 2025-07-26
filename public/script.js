@@ -33,6 +33,7 @@ const loginMessage = document.getElementById('loginMessage');
 
 // Product Upload Section
 const productUploadSection = document.getElementById('productUploadSection');
+const logoutBtn = document.getElementById('logoutBtn'); // Added logout button
 const productForm = document.getElementById('productForm');
 const productNameInput = document.getElementById('productName');
 const productDescriptionTextarea = document.getElementById('productDescription');
@@ -44,6 +45,8 @@ const uploadBtn = document.getElementById('uploadBtn');
 const uploadMessage = document.getElementById('uploadMessage');
 const uploadProgressContainer = document.getElementById('uploadProgressContainer');
 const progressBarArea = document.getElementById('progressBarArea');
+const imagePreviewContainer = document.getElementById('imagePreviewContainer'); // For the new product upload preview
+const imagePreview = document.getElementById('imagePreview'); // Inner div for images
 
 // Product Management Section
 const productList = document.getElementById('productList');
@@ -93,6 +96,8 @@ loginForm.addEventListener('submit', async (e) => {
     loginLoader.style.display = 'inline-block';
     loginMessage.style.display = 'none';
     loginMessage.textContent = ''; // Clear previous messages
+    loginMessage.classList.remove('alert-success', 'alert-warning'); // Clean up old alert classes
+    loginMessage.classList.add('alert-danger'); // Default to danger for errors
     loginBtn.disabled = true; // Disable button during login
 
     try {
@@ -113,23 +118,24 @@ loginForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Optional: Add a logout button and functionality somewhere in your productUploadSection
-// Example:
-/*
-const logoutButton = document.getElementById('logoutButton'); // You'd need to add this button in HTML
-if (logoutButton) {
-    logoutButton.addEventListener('click', async () => {
-        try {
-            await signOut(auth);
-            console.log("Logged out successfully!");
-            // UI updates are handled by onAuthStateChanged listener
-        } catch (error) {
-            console.error("Logout error:", error);
-            alert("Error logging out: " + error.message);
-        }
-    });
-}
-*/
+// Logout functionality
+logoutBtn.addEventListener('click', async () => {
+    try {
+        await signOut(auth);
+        console.log("Logged out successfully!");
+        // Optional: show a logout message
+        loginMessage.textContent = "Logged out successfully.";
+        loginMessage.className = 'mt-2 alert alert-success';
+        loginMessage.style.display = 'block';
+        setTimeout(() => {
+            loginMessage.style.display = 'none';
+        }, 3000); // Hide message after 3 seconds
+        // UI updates are handled by onAuthStateChanged listener
+    } catch (error) {
+        console.error("Logout error:", error);
+        alert("Error logging out: " + error.message);
+    }
+});
 
 
 // --- Helper function to create a progress bar for an individual file ---
@@ -150,6 +156,48 @@ function createProgressBar(fileName, targetArea) {
     };
 }
 
+// --- Image Preview Logic for New Product Upload ---
+productImageInput.addEventListener('change', (event) => {
+    imagePreview.innerHTML = ''; // Clear previous previews
+    imagePreviewContainer.style.display = 'none'; // Hide container by default
+
+    const files = event.target.files;
+    if (files.length > 0) {
+        imagePreviewContainer.style.display = 'flex'; // Show container
+
+        for (const file of files) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imgItem = document.createElement('div');
+                imgItem.className = 'multi-image-preview-item';
+                imgItem.innerHTML = `
+                    <img src="${e.target.result}" alt="Image Preview">
+                    <button type="button" class="remove-btn" data-file-name="${file.name}">&times;</button>
+                `;
+                imagePreview.appendChild(imgItem);
+
+                // Add event listener to remove button for this specific image
+                imgItem.querySelector('.remove-btn').addEventListener('click', (removeEvent) => {
+                    const fileNameToRemove = removeEvent.target.dataset.fileName;
+                    // Create a new DataTransfer object to modify the FileList
+                    const dataTransfer = new DataTransfer();
+                    Array.from(productImageInput.files)
+                        .filter(f => f.name !== fileNameToRemove)
+                        .forEach(f => dataTransfer.items.add(f));
+                    productImageInput.files = dataTransfer.files; // Update the file input's files
+
+                    imgItem.remove(); // Remove the image preview element
+                    if (productImageInput.files.length === 0) {
+                        imagePreviewContainer.style.display = 'none'; // Hide container if no images
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+});
+
+
 // --- Product Upload Logic ---
 productForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -163,7 +211,7 @@ productForm.addEventListener('submit', async (e) => {
 
     if (productImages.length === 0) {
         uploadMessage.textContent = "Please select at least one image.";
-        uploadMessage.className = 'mt-2 text-danger';
+        uploadMessage.className = 'mt-2 alert alert-danger';
         uploadMessage.style.display = 'block';
         return;
     }
@@ -171,6 +219,7 @@ productForm.addEventListener('submit', async (e) => {
     // Disable button and clear previous messages/progress bars
     uploadBtn.disabled = true;
     uploadMessage.style.display = 'none';
+    uploadMessage.classList.remove('alert-success', 'alert-danger', 'alert-warning');
     progressBarArea.innerHTML = ''; // Clear previous progress bars
     uploadProgressContainer.style.display = 'block'; // Show progress container
 
@@ -220,10 +269,10 @@ productForm.addEventListener('submit', async (e) => {
         }
 
         if (!uploadSuccess) {
-            uploadMessage.textContent = "Some images failed to upload. Product not saved.";
-            uploadMessage.className = 'mt-2 text-warning'; // Warning instead of danger if some uploaded
+            uploadMessage.textContent = "Some images failed to upload. Product might not be fully saved.";
+            uploadMessage.className = 'mt-2 alert alert-warning'; // Warning instead of danger if some uploaded
             uploadMessage.style.display = 'block';
-            return; // Don't save product if some uploads failed
+            // We will still attempt to save the product with successfully uploaded images
         }
 
         // Save product data to Firestore
@@ -242,7 +291,7 @@ productForm.addEventListener('submit', async (e) => {
         console.log("Document written with ID: ", docRef.id);
 
         uploadMessage.textContent = "Product uploaded successfully!";
-        uploadMessage.className = 'mt-2 text-success';
+        uploadMessage.className = 'mt-2 alert alert-success';
         uploadMessage.style.display = 'block';
 
         // Clear form fields after successful upload
@@ -253,6 +302,8 @@ productForm.addEventListener('submit', async (e) => {
         productCurrencySelect.value = 'NGN'; // Reset to default
         productImageInput.value = ''; // Clear file input
         progressBarArea.innerHTML = ''; // Clear progress bars after completion
+        imagePreview.innerHTML = ''; // Clear image previews
+        imagePreviewContainer.style.display = 'none'; // Hide image preview container
 
         // Refresh the product list in the management section
         await fetchAndDisplayProductsForManagement();
@@ -260,7 +311,7 @@ productForm.addEventListener('submit', async (e) => {
     } catch (error) {
         console.error("Error during product upload:", error);
         uploadMessage.textContent = "Error uploading product: " + error.message;
-        uploadMessage.className = 'mt-2 text-danger';
+        uploadMessage.className = 'mt-2 alert alert-danger';
         uploadMessage.style.display = 'block';
     } finally {
         // Re-enable button regardless of success or failure
@@ -363,15 +414,13 @@ async function openEditModal(productId) {
         if (!url) return; // Skip empty URLs
 
         const imgContainer = document.createElement('div');
-        imgContainer.className = 'position-relative';
+        imgContainer.className = 'position-relative multi-image-preview-item'; // Reusing multi-image preview style
         imgContainer.innerHTML = `
-            <img src="${url}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
-            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 rounded-circle" style="width: 25px; height: 25px; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; transform: translate(25%, -25%);" data-image-url="${url}">&times;</button>
+            <img src="${url}" alt="Image Preview">
+            <button type="button" class="remove-btn" data-image-url="${url}">&times;</button>
         `;
-        const deleteButton = imgContainer.querySelector('button');
+        const deleteButton = imgContainer.querySelector('.remove-btn');
         // When clicking the 'x' button, simply remove it from the displayed preview
-        // The actual deletion from Firebase Storage will be handled when the product is saved,
-        // or through a more robust cleanup process if the user doesn't save.
         deleteButton.addEventListener('click', () => {
             if (confirm("Are you sure you want to remove this image? This change will be saved when you click 'Save Changes' for the product.")) {
                 imgContainer.remove();
@@ -381,6 +430,7 @@ async function openEditModal(productId) {
     });
 
     editMessage.style.display = 'none';
+    editMessage.classList.remove('alert-success', 'alert-danger', 'alert-warning');
     editUploadProgressContainer.style.display = 'none'; // Hide progress until new upload
     editProgressBarArea.innerHTML = ''; // Clear progress
     editProductImagesInput.value = ''; // Clear any previously selected new files
@@ -394,6 +444,7 @@ editProductForm.addEventListener('submit', async (e) => {
 
     saveEditBtn.disabled = true;
     editMessage.style.display = 'none';
+    editMessage.classList.remove('alert-success', 'alert-danger', 'alert-warning');
     editProgressBarArea.innerHTML = ''; // Clear progress
     editUploadProgressContainer.style.display = 'block';
 
@@ -401,13 +452,14 @@ editProductForm.addEventListener('submit', async (e) => {
     const existingProduct = allManageProducts.find(p => p.id === productId);
     if (!existingProduct) {
         editMessage.textContent = "Product not found for update.";
-        editMessage.className = 'mt-2 text-danger';
+        editMessage.className = 'mt-2 alert alert-danger';
         editMessage.style.display = 'block';
         saveEditBtn.disabled = false;
         return;
     }
 
     // Get current images displayed (these are the ones remaining after any removals from the UI)
+    // IMPORTANT: This assumes the images in `currentImagesPreview` are the ones to KEEP.
     let updatedImageUrls = Array.from(currentImagesPreview.querySelectorAll('img')).map(img => img.src);
 
     const newImages = editProductImagesInput.files;
@@ -452,12 +504,12 @@ editProductForm.addEventListener('submit', async (e) => {
         });
     }
 
-    if (!newUploadSuccess && newImages.length > 0) { // Only warn if user tried to upload new images and it failed
+    if (!newUploadSuccess && newImages.length > 0) {
         editMessage.textContent = "Some new images failed to upload. Product might not be fully updated.";
-        editMessage.className = 'mt-2 text-warning';
+        editMessage.className = 'mt-2 alert alert-warning';
         editMessage.style.display = 'block';
         saveEditBtn.disabled = false;
-        return;
+        // Proceed with saving other product data and already successfully uploaded images
     }
 
     try {
@@ -477,7 +529,7 @@ editProductForm.addEventListener('submit', async (e) => {
         await updateDoc(productRef, updatedData);
 
         editMessage.textContent = "Product updated successfully!";
-        editMessage.className = 'mt-2 text-success';
+        editMessage.className = 'mt-2 alert alert-success';
         editMessage.style.display = 'block';
 
         // Refresh the product list in the background
@@ -491,7 +543,7 @@ editProductForm.addEventListener('submit', async (e) => {
     } catch (error) {
         console.error("Error updating product:", error);
         editMessage.textContent = "Error updating product: " + error.message;
-        editMessage.className = 'mt-2 text-danger';
+        editMessage.className = 'mt-2 alert alert-danger';
         editMessage.style.display = 'block';
     } finally {
         saveEditBtn.disabled = false;
@@ -505,7 +557,7 @@ editProductForm.addEventListener('submit', async (e) => {
 
 // Delete Product
 async function deleteProduct(productId) {
-    if (!confirm("Are you sure you want to delete this product? This action cannot be undone and will delete associated images.")) {
+    if (!confirm("Are you sure you want to delete this product? This action cannot be undone and will delete associated images from storage.")) {
         return;
     }
 
@@ -513,17 +565,14 @@ async function deleteProduct(productId) {
         const productRef = doc(db, `artifacts/${appId}/public/data/products`, productId);
         const productToDelete = allManageProducts.find(p => p.id === productId);
 
-        // Optional: Delete images from Storage
-        // Iterating through imageUrls to delete all associated images
+        // Delete images from Storage
         const imagesToDelete = productToDelete.imageUrls && Array.isArray(productToDelete.imageUrls)
             ? productToDelete.imageUrls
             : (productToDelete.imageUrl ? [productToDelete.imageUrl] : []); // Handle old single imageUrl
 
         for (const imageUrl of imagesToDelete) {
             try {
-                // To get the reference from a download URL, you need to extract the path.
-                // Firebase Storage URLs often look like: https://firebasestorage.googleapis.com/.../o/path%2Fto%2Fimage.jpg?...
-                // The path is after '/o/' and before '?'
+                // Extract the path from the download URL to get the Storage reference
                 const pathStartIndex = imageUrl.indexOf('/o/');
                 if (pathStartIndex !== -1) {
                     let path = imageUrl.substring(pathStartIndex + 3);
@@ -536,7 +585,7 @@ async function deleteProduct(productId) {
                     await deleteObject(imageRef);
                     console.log(`Deleted image from Storage: ${path}`);
                 } else {
-                    console.warn(`Could not parse storage path from URL: ${imageUrl}`);
+                    console.warn(`Could not parse storage path from URL for deletion: ${imageUrl}`);
                 }
             } catch (imgError) {
                 console.warn(`Could not delete image ${imageUrl} from Storage:`, imgError);
@@ -554,8 +603,7 @@ async function deleteProduct(productId) {
         // Show a temporary success message
         const tempMsg = document.createElement('p');
         tempMsg.textContent = "Product deleted successfully!";
-        tempMsg.className = 'text-success text-center my-3';
-        // Insert before the productList div
+        tempMsg.className = 'text-success text-center my-3 alert alert-success';
         productList.parentNode.insertBefore(tempMsg, productList);
         setTimeout(() => tempMsg.remove(), 3000);
 
@@ -571,13 +619,19 @@ function formatCurrency(amount, currencyCode = 'NGN') {
     if (typeof amount !== 'number' || isNaN(amount)) {
         return 'Price Not Available';
     }
-    // Using 'en-NG' locale for Nigerian Naira symbol. Adjust for other currencies.
-    return new Intl.NumberFormat('en-US', { // Using en-US for generic formatting, then apply symbol
+    // Using 'en-US' for generic formatting, then applying currency symbol logic
+    const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: currencyCode,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
-    }).format(amount);
+    });
+
+    // Special handling for NGN to ensure ₦ symbol
+    if (currencyCode === 'NGN') {
+        return '₦' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+    return formatter.format(amount);
 }
 
 // Ensure your Firebase config is updated with your actual project details
