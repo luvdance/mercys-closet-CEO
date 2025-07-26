@@ -30,6 +30,7 @@ const productImageInput = document.getElementById('productImage');
 const imagePreviewContainer = document.getElementById('imagePreviewContainer');
 const productNameInput = document.getElementById('productName');
 const productCategorySelect = document.getElementById('productCategory');
+const productPriceInput = document.getElementById('productPrice'); // ADDED: Price input element
 const uploadBtn = document.getElementById('uploadBtn');
 const uploadMessage = document.getElementById('uploadMessage');
 const uploadSpinner = document.getElementById('uploadSpinner');
@@ -150,9 +151,10 @@ async function handleUpload(e) {
     const imageFile = productImageInput.files[0];
     const productName = productNameInput.value;
     const productCategory = productCategorySelect.value;
+    const productPrice = parseFloat(productPriceInput.value); // ADDED: Get price and convert to number
 
-    if (!imageFile || !productName || !productCategory) {
-        showMessage(uploadMessage, 'Please fill in all fields and select an image.', 'danger');
+    if (!imageFile || !productName || !productCategory || isNaN(productPrice) || productPrice <= 0) { // MODIFIED: Added price validation
+        showMessage(uploadMessage, 'Please fill in all fields, select an image, and provide a valid price (must be a number greater than 0).', 'danger');
         hideSpinner();
         return;
     }
@@ -173,6 +175,8 @@ async function handleUpload(e) {
             name: productName,
             category: productCategory,
             imageUrl: imageUrl,
+            price: productPrice, // ADDED: Save the price
+            currency: "NGN", // ADDED: Explicitly state currency as Naira
             timestamp: serverTimestamp() // Add a server-generated timestamp
         });
 
@@ -231,6 +235,12 @@ document.addEventListener('DOMContentLoaded', () => {
         productImageInput.addEventListener('change', handleImagePreview);
     } else {
         console.warn("Product image input with ID 'productImage' not found.");
+    }
+    
+    // ADDED: Check for productPriceInput, though it's not strictly necessary to attach a listener
+    // unless you want real-time validation or formatting as the user types.
+    if (!productPriceInput) {
+        console.warn("Product price input with ID 'productPrice' not found.");
     }
 
     // Hide spinner initially
