@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mercys Closet - CEO Product Upload Tool</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -56,6 +54,12 @@
                         <option value="Wristwatches">Wristwatches</option>
                     </select>
                 </div>
+                
+                <div class="mb-3">
+                    <label for="productPrice" class="form-label">Price (NGN)</label>
+                    <input type="number" class="form-control" id="productPrice" placeholder="Enter price in Naira" min="0" step="0.01" required>
+                </div>
+
                 <button type="submit" class="btn btn-primary-custom" id="uploadBtn">Upload Product</button>
                 <div id="uploadMessage" class="alert mt-3 d-none" role="alert"></div>
                 <div class="loading-spinner" id="uploadSpinner">
@@ -67,7 +71,6 @@
             </form>
         </div>
     </div>
-    <!-- Bootstrap JS (optional, for some components) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const firebaseConfig = {
@@ -81,7 +84,6 @@
         // Ensure this appId matches the one in firebaseConfig.appId
         const appId = "1:102114420195:web:af33297eab51e9c0032cd6";
     </script>
-    <!--script for ceo tool-->
-    <script type="module" src="script.js"></script>
+    <script type="module" src="upload_app.js"></script> 
 </body>
 </html>
