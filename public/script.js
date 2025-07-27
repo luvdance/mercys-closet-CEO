@@ -9,7 +9,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyA3tUEHVe_y8BQ_3_16YsKlokc10qDox-8",
     authDomain: "mercy-s-closet-ceo-app.firebaseapp.com",
     projectId: "mercy-s-closet-ceo-app",
-    storageBucket: "mercy-s-closet-ceo-app.appspot.com", // THIS IS CORRECT
+    storageBucket: "mercy-s-closet-ceo-app.appspot.com", // This is confirmed correct for web SDK
     messagingSenderId: "102114420195",
     appId: "1:102114420195:web:af33297eab51e9c0032cd6"
 };
@@ -61,7 +61,7 @@ const editProductNameInput = document.getElementById('editProductName');
 const editProductDescriptionTextarea = document.getElementById('editProductDescription');
 const editProductCategorySelect = document.getElementById('editProductCategory');
 const editProductPriceInput = document.getElementById('editProductPrice');
-const editProductCurrencySelect = document.getElementById('editProductCurrency'); // FIXED THIS LINE!
+const editProductCurrencySelect = document.getElementById('editProductCurrency'); // Fixed this line
 const currentImagesPreview = document.getElementById('currentImagesPreview');
 const editProductImagesInput = document.getElementById('editProductImages');
 const saveEditBtn = document.getElementById('saveEditBtn');
@@ -232,7 +232,8 @@ productForm.addEventListener('submit', async (e) => {
             const file = productImages[i];
             const fileName = file.name;
             // Create a unique filename for storage to prevent overwrites
-            const storagePath = `product_images/${Date.now()}_${fileName}`; // THIS IS THE PATH USED FOR UPLOAD
+            // MODIFIED: Aligning storage path with your working Firebase Storage Rules
+            const storagePath = `artifacts/${appId}/public/images/${productCategory}/${Date.now()}_${fileName}`;
             const storageRef = ref(storage, storagePath);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -473,7 +474,8 @@ editProductForm.addEventListener('submit', async (e) => {
     for (let i = 0; i < newImages.length; i++) {
         const file = newImages[i];
         const fileName = file.name;
-        const storagePath = `product_images/${Date.now()}_${fileName}`; // Ensure this matches rules for new uploads
+        // MODIFIED: Aligning storage path with your working Firebase Storage Rules
+        const storagePath = `artifacts/${appId}/public/images/${editProductCategorySelect.value}/${Date.now()}_${fileName}`;
         const storageRef = ref(storage, storagePath);
         const uploadTask = uploadBytesResumable(storageRef, file);
 
