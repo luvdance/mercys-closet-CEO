@@ -1,180 +1,142 @@
-        body {
-            font-family: 'Inter', sans-serif; /* Applied from your previous style */
-            background-color: #f0f2f5; /* Applied from your previous style */
-            display: flex; /* Centering for the main container */
-            justify-content: center; /* Centering for the main container */
-            align-items: center; /* Centering for the main container */
-            min-height: 100vh; /* Centering for the main container */
-            margin: 0;
-            color: #333;
-        }
-        .main-container-wrapper { /* New wrapper for overall content, to align with previous body styles */
-            max-width: 1200px;
-            width: 100%;
-        }
-        #loginSection {
-            background-color: #ffffff; /* Applied from your previous style */
-            padding: 30px;
-            border-radius: 12px; /* Applied from your previous style */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Applied from your previous style */
-            max-width: 500px; /* Adjusted for overall content */
-            margin: auto; /* Center the sections */
-        }
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    color: #333;
+}
+.container {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    max-width: 500px; /* Reduced max-width slightly to better fit lists below */
+    width: 100%;
+    margin-top: 20px; /* Added margin for larger content */
+    margin-bottom: 20px;
+}
+h2 {
+    color: #4b004d; /* Deep Purple */
+    font-weight: 700;
+    margin-bottom: 25px;
+    text-align: center;
+}
+.btn-primary-custom {
+    background-color: #6a006a; /* A lighter purple */
+    border-color: #6a006a;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #fff;
+}
+.btn-primary-custom:hover {
+    background-color: #8b008b; /* Even lighter on hover */
+    border-color: #8b008b;
+    color: #fff;
+}
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 10px 15px;
+    border: 1px solid #ced4da;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #6a006a;
+    box-shadow: 0 0 0 0.25rem rgba(106, 0, 106, 0.25);
+}
+.alert {
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+}
+/* General loading spinner style */
+.loading-spinner {
+    display: none; /* Controlled by JS */
+    text-align: center;
+    margin-top: 20px;
+}
+.text-primary-custom { /* Added for spinner color consistency */
+    color: #6a006a !important;
+}
 
-#productUploadSection {
-            background-color: #ffffff; /* Applied from your previous style */
-            padding: 30px;
-            border-radius: 12px; /* Applied from your previous style */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Applied from your previous style */
-            max-width: 700px; /* Adjusted for overall content */
-            margin: auto; /* Center the sections */
-        }
+.image-preview-container {
+    margin-top: 20px;
+    text-align: center;
+    border: 1px dashed #ced4da;
+    padding: 15px;
+    border-radius: 8px;
+    min-height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f8f9fa;
+}
+.image-preview-container img { /* Targeted the img tag directly as per JS output */
+    max-width: 100%;
+    max-height: 150px;
+    border-radius: 8px;
+    object-fit: contain;
+}
+.logout-btn {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    width: auto;
+    /* margin-top: 20px; Removed as it's in d-flex for alignment */
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #fff; /* Ensure text color is white */
+}
+.logout-btn:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+.mb-3 {
+    margin-bottom: 1rem !important;
+}
 
-        #productUploadSection {
-            display: none; /* Hidden by default, shown after login */
-        }
-        h1, h2 {
-            color: #4b004d; /* Deep Purple */
-            font-weight: 700;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-        .btn-primary-custom { /* Custom class for your purple primary buttons */
-            background-color: #6a006a; /* A lighter purple */
-            border-color: #6a006a;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: 600;
-            color: #fff;
-        }
-        .btn-primary-custom:hover {
-            background-color: #8b008b; /* Even lighter on hover */
-            border-color: #8b008b;
-            color: #fff;
-        }
-        .form-control, .form-select {
-            border-radius: 8px;
-            padding: 10px 15px;
-            border: 1px solid #ced4da;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #6a006a; /* Purple focus border */
-            box-shadow: 0 0 0 0.25rem rgba(106, 0, 106, 0.25); /* Purple focus shadow */
-        }
-        .alert { /* Your previous alert styles */
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
-        }
-        .login-loader, .upload-loader { /* Generic loader class based on your previous "loading-spinner" */
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-        }
-        /* Style for Bootstrap spinners */
-        .spinner-border {
-            color: #6a006a !important; /* Make spinner purple */
-        }
-        #loginBtn + .spinner-border { /* Adjust margin for login loader */
-            margin-left: 10px;
-        }
+/* New Styles for Upload Progress */
+.progress-container {
+    margin-top: 20px;
+    text-align: center;
+}
+.progress {
+    height: 25px;
+    border-radius: 8px;
+}
+.progress-bar {
+    line-height: 25px; /* Vertically center text */
+    color: #fff; /* Ensure text is visible */
+}
 
-        .image-preview-container { /* Applied from your previous style */
-            margin-top: 20px;
-            text-align: center;
-            border: 1px dashed #ced4da;
-            padding: 15px;
-            border-radius: 8px;
-            min-height: 150px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f8f9fa;
-        }
-        .image-preview { /* Applied from your previous style */
-            max-width: 100%;
-            max-height: 150px;
-            border-radius: 8px;
-            object-fit: contain;
-        }
-        .multi-image-preview-item {
-            display: inline-block;
-            position: relative;
-            margin: 5px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        .multi-image-preview-item img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            display: block;
-        }
-        .multi-image-preview-item .remove-btn {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            background-color: rgba(220, 53, 69, 0.8);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 0.75rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        .logout-btn { /* Applied from your previous style */
-            background-color: #dc3545;
-            border-color: #dc3545;
-            width: auto;
-            margin-top: 20px;
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-weight: 600;
-            float: right; /* Align to the right */
-        }
-        .logout-btn:hover { /* Applied from your previous style */
-            background-color: #c82333;
-            border-color: #bd2130;
-        }
-
-        /* Specific styles for upload progress bars */
-        #uploadProgressContainer, #editUploadProgressContainer {
-            border: 1px solid #dee2e6;
-            padding: 15px;
-            border-radius: 5px;
-            background-color: #e9ecef;
-            max-height: 250px;
-            overflow-y: auto;
-        }
-        .progress {
-            height: 25px;
-            font-weight: bold;
-        }
-        .progress-bar {
-            transition: width 0.3s ease-in-out;
-            background-color: #6a006a !important; /* Make progress bar purple */
-        }
-        .progress-bar.bg-success {
-            background-color: #28a745 !important; /* Keep success green */
-        }
-        .progress-bar.bg-danger {
-            background-color: #dc3545 !important; /* Keep danger red */
-        }
-
-        #currentImagesPreview img {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        #editProductForm .position-relative .btn-danger {
-            background-color: rgba(220, 53, 69, 0.8) !important; /* Ensure red for image delete in modal */
-            border-color: rgba(220, 53, 69, 0.8) !important;
-        }
+/* New Styles for Product List */
+#uploadedProductsList {
+    margin-top: 20px;
+}
+#uploadedProductsList .list-group-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+#uploadedProductsList .list-group-item:last-child {
+    margin-bottom: 0;
+}
+#uploadedProductsList .img-thumbnail {
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+.delete-btn {
+    background-color: #dc3545; /* Bootstrap danger color */
+    border-color: #dc3545;
+    color: #fff;
+}
+.delete-btn:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
