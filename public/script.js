@@ -61,7 +61,7 @@ const editProductNameInput = document.getElementById('editProductName');
 const editProductDescriptionTextarea = document.getElementById('editProductDescription');
 const editProductCategorySelect = document.getElementById('editProductCategory');
 const editProductPriceInput = document.getElementById('editProductPrice');
-const editProductCurrencySelect = document = document.getElementById('editProductCurrency'); // Fixed typo here
+const editProductCurrencySelect = document.getElementById('editProductCurrency'); // FIXED THIS LINE!
 const currentImagesPreview = document.getElementById('currentImagesPreview');
 const editProductImagesInput = document.getElementById('editProductImages');
 const saveEditBtn = document.getElementById('saveEditBtn');
