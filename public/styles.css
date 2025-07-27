@@ -12,7 +12,7 @@
             max-width: 1200px;
             width: 100%;
         }
-        #loginSection, #productUploadSection {
+        #loginSection {
             background-color: #ffffff; /* Applied from your previous style */
             padding: 30px;
             border-radius: 12px; /* Applied from your previous style */
@@ -20,6 +20,16 @@
             max-width: 500px; /* Adjusted for overall content */
             margin: auto; /* Center the sections */
         }
+
+#productUploadSection {
+            background-color: #ffffff; /* Applied from your previous style */
+            padding: 30px;
+            border-radius: 12px; /* Applied from your previous style */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Applied from your previous style */
+            max-width: 700px; /* Adjusted for overall content */
+            margin: auto; /* Center the sections */
+        }
+
         #productUploadSection {
             display: none; /* Hidden by default, shown after login */
         }
