@@ -140,3 +140,15 @@ h2 {
     background-color: #c82333;
     border-color: #bd2130;
 }
+/* Ensure form elements inside modal look consistent */
+#editProductForm .form-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* Alert messages inside the modal */
+#editMessage {
+    margin-top: 15px;
+    border-radius: 5px;
+    font-size: 0.9em;
+}
