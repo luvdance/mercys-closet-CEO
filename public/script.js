@@ -3,7 +3,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyA3tUEHVe_y8BQ_3_16YsKlokc10qDox-8",
     authDomain: "mercy-s-closet-ceo-app.firebaseapp.com",
     projectId: "mercy-s-closet-ceo-app",
-    storageBucket: "mercy-s-closet-ceo-app.firebasestorage.app",
+    storageBucket: "mercy-s-closet-ceo-app.firebasestorage.app", // Confirmed correct by user
     messagingSenderId: "102114420195",
     appId: "1:102114420195:web:af33297eab51e9c0032cd6"
 };
@@ -13,7 +13,8 @@ const appId = "1:102114420195:web:af33297eab51e9c0032cd6";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
-import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// Import 'updateDoc' along with existing Firestore imports
+import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // Initialize Firebase app
 const app = initializeApp(firebaseConfig);
@@ -47,6 +48,17 @@ const uploadCancelBtn = document.getElementById('uploadCancelBtn');
 
 const uploadedProductsList = document.getElementById('uploadedProductsList');
 const productListSection = document.getElementById('productListSection');
+
+// New DOM Elements for Edit Modal
+const editProductModal = new bootstrap.Modal(document.getElementById('editProductModal')); // Initialize Bootstrap Modal object
+const editProductForm = document.getElementById('editProductForm');
+const editProductIdInput = document.getElementById('editProductId');
+const editProductNameInput = document.getElementById('editProductName');
+const editProductCategorySelect = document.getElementById('editProductCategory');
+const editProductPriceInput = document.getElementById('editProductPrice');
+const saveEditBtn = document.getElementById('saveEditBtn');
+const editMessage = document.getElementById('editMessage');
+
 
 let currentUploadTask = null; // To hold the upload task for cancellation
 
@@ -248,7 +260,71 @@ function handleUploadCancel() {
     currentUploadTask = null; // Ensure task is cleared regardless
 }
 
-// --- Product Listing and Deletion Logic ---
+// --- Product Listing, Editing, and Deletion Logic ---
+
+// Function to handle the "Edit" button click
+async function handleEditButtonClick(productId) {
+    hideMessage(editMessage); // Clear any previous messages in the modal
+    saveEditBtn.disabled = true; // Disable save button while loading data
+
+    try {
+        const productDocRef = doc(db, `artifacts/${appId}/public/data/products`, productId);
+        const productSnapshot = await getDoc(productDocRef); // Need to import getDoc
+
+        if (productSnapshot.exists()) {
+            const productData = productSnapshot.data();
+            editProductIdInput.value = productId;
+            editProductNameInput.value = productData.name;
+            editProductCategorySelect.value = productData.category;
+            editProductPriceInput.value = productData.price;
+            editProductModal.show(); // Show the Bootstrap modal
+        } else {
+            showMessage(uploadMessage, 'Product not found for editing.', 'danger');
+            console.error("Product document not found:", productId);
+        }
+    } catch (error) {
+        console.error("Error fetching product for edit:", error);
+        showMessage(uploadMessage, `Error loading product for edit: ${error.message}`, 'danger');
+    } finally {
+        saveEditBtn.disabled = false; // Re-enable save button
+    }
+}
+
+// Function to handle saving edited product details
+async function handleSaveEditedProduct() {
+    hideMessage(editMessage);
+    saveEditBtn.disabled = true;
+
+    const productId = editProductIdInput.value;
+    const newName = editProductNameInput.value.trim();
+    const newCategory = editProductCategorySelect.value;
+    const newPrice = parseFloat(editProductPriceInput.value);
+
+    if (!newName || !newCategory || isNaN(newPrice) || newPrice <= 0) {
+        showMessage(editMessage, 'Please fill in all fields and enter a valid price.', 'danger');
+        saveEditBtn.disabled = false;
+        return;
+    }
+
+    try {
+        const productDocRef = doc(db, `artifacts/${appId}/public/data/products`, productId);
+        await updateDoc(productDocRef, {
+            name: newName,
+            category: newCategory,
+            price: newPrice
+            // We are not updating imageUrl or imagePath here
+        });
+
+        showMessage(uploadMessage, 'Product updated successfully!', 'success');
+        editProductModal.hide(); // Hide the modal on success
+    } catch (error) {
+        console.error("Error updating product:", error);
+        showMessage(editMessage, `Failed to update product: ${error.message}`, 'danger');
+    } finally {
+        saveEditBtn.disabled = false;
+    }
+}
+
 
 function setupProductsListener() {
     const productsCollectionRef = collection(db, `artifacts/${appId}/public/data/products`);
@@ -281,14 +357,19 @@ function setupProductsListener() {
                     <img src="${product.imageUrl}" alt="${product.name}" class="img-thumbnail me-3" style="width: 50px; height: 50px; object-fit: cover;">
                     <span>${product.name} (${product.category}) - ${formattedPrice}</span>
                 </div>
-                <button class="btn btn-danger btn-sm delete-btn" data-id="${productId}" data-image-path="${product.imagePath}">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
+                <div>
+                    <button class="btn btn-info btn-sm edit-btn me-2" data-id="${productId}">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-danger btn-sm delete-btn" data-id="${productId}" data-image-path="${product.imagePath}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
             `;
             uploadedProductsList.appendChild(li);
         });
 
-        // Attach event listeners to new delete buttons
+        // Attach event listeners to new delete and edit buttons
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const productId = e.currentTarget.dataset.id;
@@ -298,6 +379,15 @@ function setupProductsListener() {
                 }
             });
         });
+
+        // NEW: Attach event listeners to new edit buttons
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const productId = e.currentTarget.dataset.id;
+                handleEditButtonClick(productId);
+            });
+        });
+
     }, (error) => {
         console.error("Error fetching products:", error);
         showMessage(uploadMessage, 'Error fetching product list.', 'danger');
@@ -370,6 +460,14 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.warn("Upload cancel button with ID 'uploadCancelBtn' not found.");
     }
+
+    // NEW: Add event listener for the Save Changes button in the edit modal
+    if (saveEditBtn) {
+        saveEditBtn.addEventListener('click', handleSaveEditedProduct);
+    } else {
+        console.warn("Save Edit button with ID 'saveEditBtn' not found.");
+    }
+
 
     // Hide spinners and progress initially
     hideSpinner(uploadSpinner);
