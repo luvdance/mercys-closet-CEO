@@ -9,7 +9,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyA3tUEHVe_y8BQ_3_16YsKlokc10qDox-8",
     authDomain: "mercy-s-closet-ceo-app.firebaseapp.com",
     projectId: "mercy-s-closet-ceo-app",
-    storageBucket: "mercy-s-closet-ceo-app.appspot.com",
+    storageBucket: "mercy-s-closet-ceo-app.appspot.com", // THIS IS CORRECT
     messagingSenderId: "102114420195",
     appId: "1:102114420195:web:af33297eab51e9c0032cd6"
 };
@@ -236,7 +236,7 @@ productForm.addEventListener('submit', async (e) => {
             const storageRef = ref(storage, storagePath);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
-            // Temporarily comment out progress bar UI updates for debugging
+            // Temporarily commented out progress bar UI updates for debugging
             // const { progressBar, statusText } = createProgressBar(fileName, progressBarArea);
 
             // Listen for state changes, errors, and completion of the upload.
@@ -476,7 +476,7 @@ editProductForm.addEventListener('submit', async (e) => {
         const storageRef = ref(storage, storagePath);
         const uploadTask = uploadBytesResumable(storageRef, file);
 
-        // Temporarily comment out progress bar UI updates for debugging
+        // Temporarily commented out progress bar UI updates for debugging
         // const { progressBar, statusText } = createProgressBar(fileName, editProgressBarArea);
 
         await new Promise((resolve, reject) => {
@@ -538,10 +538,8 @@ editProductForm.addEventListener('submit', async (e) => {
         editMessage.className = 'mt-2 alert alert-success';
         editMessage.style.display = 'block';
 
-        // Refresh the product list in the background
         await fetchAndDisplayProductsForManagement();
 
-        // Optionally, close the modal after a delay
         setTimeout(() => {
             editProductModal.hide();
         }, 1500);
@@ -553,7 +551,6 @@ editProductForm.addEventListener('submit', async (e) => {
         editMessage.style.display = 'block';
     } finally {
         saveEditBtn.disabled = false;
-        // Hide progress container after all uploads/updates
         setTimeout(() => {
             editUploadProgressContainer.style.display = 'none';
         }, 1000);
@@ -571,14 +568,12 @@ async function deleteProduct(productId) {
         const productRef = doc(db, `artifacts/${appId}/public/data/products`, productId);
         const productToDelete = allManageProducts.find(p => p.id === productId);
 
-        // Delete images from Storage
         const imagesToDelete = productToDelete.imageUrls && Array.isArray(productToDelete.imageUrls)
             ? productToDelete.imageUrls
-            : (productToDelete.imageUrl ? [productToDelete.imageUrl] : []); // Handle old single imageUrl
+            : (productToDelete.imageUrl ? [productToDelete.imageUrl] : []);
 
         for (const imageUrl of imagesToDelete) {
             try {
-                // Extract the path from the download URL to get the Storage reference
                 const pathStartIndex = imageUrl.indexOf('/o/');
                 if (pathStartIndex !== -1) {
                     let path = imageUrl.substring(pathStartIndex + 3);
@@ -586,7 +581,7 @@ async function deleteProduct(productId) {
                     if (queryIndex !== -1) {
                         path = path.substring(0, queryIndex);
                     }
-                    path = decodeURIComponent(path); // Decode URL-encoded characters (e.g., %2F for /)
+                    path = decodeURIComponent(path);
                     const imageRef = ref(storage, path);
                     await deleteObject(imageRef);
                     console.log(`Deleted image from Storage: ${path}`);
@@ -595,18 +590,15 @@ async function deleteProduct(productId) {
                 }
             } catch (imgError) {
                 console.warn(`Could not delete image ${imageUrl} from Storage:`, imgError);
-                // Continue even if image deletion fails, to ensure product document is removed
             }
         }
 
         await deleteDoc(productRef);
         console.log("Product document deleted successfully:", productId);
 
-        // Remove from local array and re-render UI
         allManageProducts = allManageProducts.filter(p => p.id !== productId);
         renderManageProducts();
 
-        // Show a temporary success message
         const tempMsg = document.createElement('p');
         tempMsg.textContent = "Product deleted successfully!";
         tempMsg.className = 'text-success text-center my-3 alert alert-success';
@@ -625,7 +617,6 @@ function formatCurrency(amount, currencyCode = 'NGN') {
     if (typeof amount !== 'number' || isNaN(amount)) {
         return 'Price Not Available';
     }
-    // Using 'en-US' for generic formatting, then applying currency symbol logic
     const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: currencyCode,
@@ -633,12 +624,8 @@ function formatCurrency(amount, currencyCode = 'NGN') {
         maximumFractionDigits: 0
     });
 
-    // Special handling for NGN to ensure ₦ symbol
     if (currencyCode === 'NGN') {
         return '₦' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
     return formatter.format(amount);
 }
-
-// Ensure your Firebase config is updated with your actual project details
-// BEFORE running this code.
