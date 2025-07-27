@@ -1,12 +1,21 @@
+// --- Firebase Configuration (Moved from HTML) ---
+const firebaseConfig = {
+    apiKey: "AIzaSyA3tUEHVe_y8BQ_3_16YsKlokc10qDox-8",
+    authDomain: "mercy-s-closet-ceo-app.firebaseapp.com",
+    projectId: "mercy-s-closet-ceo-app",
+    storageBucket: "mercy-s-closet-ceo-app.appspot.com",
+    messagingSenderId: "102114420195",
+    appId: "1:102114420195:web:af33297eab51e9c0032cd6"
+};
+const appId = "1:102114420195:web:af33297eab51e9c0032cd6";
+
 // --- Firebase SDK Imports ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// --- Firebase Configuration ---
-// IMPORTANT: These variables (firebaseConfig, appId) are now expected to be
-// defined globally in your HTML <script> tag BEFORE this module is loaded.
+// Initialize Firebase app
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const storage = getStorage(app);
@@ -19,8 +28,8 @@ const loginForm = document.getElementById('loginForm');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const loginMessage = document.getElementById('loginMessage');
-const loginSpinner = document.getElementById('loginSpinner'); // New
-const loginBtn = document.getElementById('loginBtn'); // New for disabling
+const loginSpinner = document.getElementById('loginSpinner');
+const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 
 const uploadForm = document.getElementById('uploadForm');
@@ -28,16 +37,16 @@ const productImageInput = document.getElementById('productImage');
 const imagePreviewContainer = document.getElementById('imagePreviewContainer');
 const productNameInput = document.getElementById('productName');
 const productCategorySelect = document.getElementById('productCategory');
-const productPriceInput = document.getElementById('productPrice'); // New
+const productPriceInput = document.getElementById('productPrice');
 const uploadBtn = document.getElementById('uploadBtn');
 const uploadMessage = document.getElementById('uploadMessage');
 const uploadSpinner = document.getElementById('uploadSpinner');
-const uploadProgressContainer = document.getElementById('uploadProgressContainer'); // New
-const uploadProgressBar = document.getElementById('uploadProgressBar'); // New
-const uploadCancelBtn = document.getElementById('uploadCancelBtn'); // New
+const uploadProgressContainer = document.getElementById('uploadProgressContainer');
+const uploadProgressBar = document.getElementById('uploadProgressBar');
+const uploadCancelBtn = document.getElementById('uploadCancelBtn');
 
-const uploadedProductsList = document.getElementById('uploadedProductsList'); // New
-const productListSection = document.getElementById('productListSection'); // New
+const uploadedProductsList = document.getElementById('uploadedProductsList');
+const productListSection = document.getElementById('productListSection');
 
 let currentUploadTask = null; // To hold the upload task for cancellation
 
@@ -72,8 +81,8 @@ function showUploadProgress() {
     uploadProgressBar.style.width = '0%';
     uploadProgressBar.setAttribute('aria-valuenow', 0);
     uploadProgressBar.textContent = '0%';
-    uploadBtn.disabled = true; // Disable upload button during upload
-    uploadCancelBtn.disabled = false; // Enable cancel button
+    uploadBtn.disabled = true;
+    uploadCancelBtn.disabled = false;
 }
 
 function updateUploadProgress(percentage) {
@@ -84,8 +93,8 @@ function updateUploadProgress(percentage) {
 
 function hideUploadProgress() {
     uploadProgressContainer.classList.add('d-none');
-    uploadBtn.disabled = false; // Re-enable upload button
-    uploadCancelBtn.disabled = true; // Disable cancel button
+    uploadBtn.disabled = false;
+    uploadCancelBtn.disabled = true;
 }
 
 // --- Authentication Logic ---
@@ -153,7 +162,7 @@ async function handleUpload(e) {
     const imageFile = productImageInput.files[0];
     const productName = productNameInput.value;
     const productCategory = productCategorySelect.value;
-    const productPrice = parseFloat(productPriceInput.value); // New: Get price as number
+    const productPrice = parseFloat(productPriceInput.value); // Get price as number
 
     if (!imageFile || !productName || !productCategory || isNaN(productPrice) || productPrice <= 0) {
         showMessage(uploadMessage, 'Please fill in all fields, select an image, and enter a valid price.', 'danger');
@@ -179,7 +188,12 @@ async function handleUpload(e) {
             (error) => {
                 // Handle unsuccessful uploads
                 console.error("Upload progress error:", error);
-                showMessage(uploadMessage, `Image upload failed: ${error.message}`, 'danger');
+                // Check if it's a cancellation error
+                if (error.code === 'storage/canceled') {
+                    showMessage(uploadMessage, 'Upload cancelled by user.', 'info');
+                } else {
+                    showMessage(uploadMessage, `Image upload failed: ${error.message}`, 'danger');
+                }
                 hideSpinner(uploadSpinner);
                 hideUploadProgress();
                 currentUploadTask = null;
@@ -194,7 +208,7 @@ async function handleUpload(e) {
                 await addDoc(productsCollectionRef, {
                     name: productName,
                     category: productCategory,
-                    price: productPrice, // New: Save price
+                    price: productPrice,
                     imageUrl: imageUrl,
                     imagePath: imagePath, // Save image path for easy deletion
                     timestamp: serverTimestamp()
@@ -223,16 +237,15 @@ async function handleUpload(e) {
 function handleUploadCancel() {
     if (currentUploadTask) {
         currentUploadTask.cancel();
-        showMessage(uploadMessage, 'Upload cancelled by user.', 'info');
-        console.log("Upload cancelled.");
+        // The 'state_changed' error handler will catch the cancellation
     } else {
         showMessage(uploadMessage, 'No active upload to cancel.', 'info');
+        hideSpinner(uploadSpinner);
+        hideUploadProgress();
+        uploadForm.reset();
+        imagePreviewContainer.innerHTML = '<span class="text-muted">Image preview will appear here</span>';
     }
-    hideSpinner(uploadSpinner); // Hide general spinner
-    hideUploadProgress(); // Hide progress bar
-    uploadForm.reset(); // Clear form
-    imagePreviewContainer.innerHTML = '<span class="text-muted">Image preview will appear here</span>';
-    currentUploadTask = null; // Clear the task
+    currentUploadTask = null; // Ensure task is cleared regardless
 }
 
 // --- Product Listing and Deletion Logic ---
@@ -241,6 +254,7 @@ function setupProductsListener() {
     const productsCollectionRef = collection(db, `artifacts/${appId}/public/data/products`);
     const q = query(productsCollectionRef, orderBy('timestamp', 'desc')); // Order by newest first
 
+    // Listen for real-time updates to the products collection in Firestore
     onSnapshot(q, (snapshot) => {
         uploadedProductsList.innerHTML = ''; // Clear existing list
         if (snapshot.empty) {
@@ -253,10 +267,19 @@ function setupProductsListener() {
             const productId = doc.id;
             const li = document.createElement('li');
             li.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+            // Ensure price is formatted as Naira
+            const formattedPrice = new Intl.NumberFormat('en-NG', {
+                style: 'currency',
+                currency: 'NGN',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(product.price);
+
             li.innerHTML = `
                 <div>
                     <img src="${product.imageUrl}" alt="${product.name}" class="img-thumbnail me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                    <span>${product.name} (${product.category}) - ₦${product.price.toLocaleString()}</span>
+                    <span>${product.name} (${product.category}) - ${formattedPrice}</span>
                 </div>
                 <button class="btn btn-danger btn-sm delete-btn" data-id="${productId}" data-image-path="${product.imagePath}">
                     <i class="fas fa-trash"></i> Delete
@@ -309,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
             productListSection.classList.remove('d-none'); // Show product list
             hideMessage(loginMessage);
             console.log("User is logged in:", user.email);
-            setupProductsListener(); // Start listening for product updates
+            setupProductsListener(); // Start listening for product updates from Firestore
         } else {
             loginSection.classList.remove('d-none');
             uploadSection.classList.add('d-none');
@@ -342,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("Product image input with ID 'productImage' not found.");
     }
 
-    if (uploadCancelBtn) { // New event listener for cancel button
+    if (uploadCancelBtn) {
         uploadCancelBtn.addEventListener('click', handleUploadCancel);
     } else {
         console.warn("Upload cancel button with ID 'uploadCancelBtn' not found.");
