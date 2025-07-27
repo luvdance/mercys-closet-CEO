@@ -1,9 +1,9 @@
-// --- Firebase Configuration (Moved from HTML) ---
+// --- Firebase Configuration ---
 const firebaseConfig = {
     apiKey: "AIzaSyA3tUEHVe_y8BQ_3_16YsKlokc10qDox-8",
     authDomain: "mercy-s-closet-ceo-app.firebaseapp.com",
     projectId: "mercy-s-closet-ceo-app",
-    storageBucket: "mercy-s-closet-ceo-app.firebasestorage.app", // Confirmed correct by user
+    storageBucket: "mercy-s-closet-ceo-app.firebasestorage.app",
     messagingSenderId: "102114420195",
     appId: "1:102114420195:web:af33297eab51e9c0032cd6"
 };
@@ -13,8 +13,19 @@ const appId = "1:102114420195:web:af33297eab51e9c0032cd6";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
-// Import 'updateDoc' along with existing Firestore imports
-import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { 
+    getFirestore, 
+    collection, 
+    addDoc, 
+    serverTimestamp, 
+    query, 
+    orderBy, 
+    onSnapshot, 
+    deleteDoc, 
+    doc, 
+    updateDoc, 
+    getDoc // <-- Added getDoc here
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // Initialize Firebase app
 const app = initializeApp(firebaseConfig);
@@ -58,7 +69,6 @@ const editProductCategorySelect = document.getElementById('editProductCategory')
 const editProductPriceInput = document.getElementById('editProductPrice');
 const saveEditBtn = document.getElementById('saveEditBtn');
 const editMessage = document.getElementById('editMessage');
-
 
 let currentUploadTask = null; // To hold the upload task for cancellation
 
@@ -114,6 +124,8 @@ function hideUploadProgress() {
 async function handleLogin(e) {
     e.preventDefault();
     hideMessage(loginMessage);
+
+    // Show spinner and disable button at the start of login
     showSpinner(loginSpinner, loginBtn);
 
     const email = emailInput.value;
@@ -137,6 +149,7 @@ async function handleLogin(e) {
         }
         showMessage(loginMessage, errorMessage, 'danger');
     } finally {
+        // Hide spinner and re-enable button regardless of outcome
         hideSpinner(loginSpinner, loginBtn);
     }
 }
@@ -269,7 +282,7 @@ async function handleEditButtonClick(productId) {
 
     try {
         const productDocRef = doc(db, `artifacts/${appId}/public/data/products`, productId);
-        const productSnapshot = await getDoc(productDocRef); // Need to import getDoc
+        const productSnapshot = await getDoc(productDocRef);
 
         if (productSnapshot.exists()) {
             const productData = productSnapshot.data();
@@ -380,7 +393,7 @@ function setupProductsListener() {
             });
         });
 
-        // NEW: Attach event listeners to new edit buttons
+        // Attach event listeners to new edit buttons
         document.querySelectorAll('.edit-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const productId = e.currentTarget.dataset.id;
@@ -461,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("Upload cancel button with ID 'uploadCancelBtn' not found.");
     }
 
-    // NEW: Add event listener for the Save Changes button in the edit modal
+    // Add event listener for the Save Changes button in the edit modal
     if (saveEditBtn) {
         saveEditBtn.addEventListener('click', handleSaveEditedProduct);
     } else {
@@ -471,6 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Hide spinners and progress initially
     hideSpinner(uploadSpinner);
-    hideSpinner(loginSpinner);
+    hideSpinner(loginSpinner, loginBtn); // Ensure login spinner is hidden on page load and button is enabled
     hideUploadProgress();
 });
