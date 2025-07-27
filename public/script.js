@@ -1,10 +1,10 @@
-// Import the functions you need from the SDKs you need
+// --- Firebase SDK Imports ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query, orderBy, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// Your web app's Firebase configuration
+// --- Firebase Configuration ---
 const firebaseConfig = {
     apiKey: "AIzaSyA3tUEHVe_y8BQ_3_16YsKlokc10qDox-8",
     authDomain: "mercy-s-closet-ceo-app.firebaseapp.com",
@@ -61,7 +61,7 @@ const editProductNameInput = document.getElementById('editProductName');
 const editProductDescriptionTextarea = document.getElementById('editProductDescription');
 const editProductCategorySelect = document.getElementById('editProductCategory');
 const editProductPriceInput = document.getElementById('editProductPrice');
-const editProductCurrencySelect = document.getElementById('editProductCurrency');
+const editProductCurrencySelect = document = document.getElementById('editProductCurrency'); // Fixed typo here
 const currentImagesPreview = document.getElementById('currentImagesPreview');
 const editProductImagesInput = document.getElementById('editProductImages');
 const saveEditBtn = document.getElementById('saveEditBtn');
@@ -232,12 +232,12 @@ productForm.addEventListener('submit', async (e) => {
             const file = productImages[i];
             const fileName = file.name;
             // Create a unique filename for storage to prevent overwrites
-            const storagePath = `product_images/${Date.now()}_${fileName}`;
+            const storagePath = `product_images/${Date.now()}_${fileName}`; // THIS IS THE PATH USED FOR UPLOAD
             const storageRef = ref(storage, storagePath);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
-            // Temporarily commented out progress bar UI updates for debugging
-            // const { progressBar, statusText } = createProgressBar(fileName, progressBarArea);
+            // Re-enabling progress bar UI updates
+            const { progressBar, statusText } = createProgressBar(fileName, progressBarArea);
 
             // Listen for state changes, errors, and completion of the upload.
             await new Promise((resolve, reject) => {
@@ -245,16 +245,16 @@ productForm.addEventListener('submit', async (e) => {
                     (snapshot) => {
                         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                         console.log(`Upload of ${fileName} is ${Math.round(progress)}% done`);
-                        // progressBar.style.width = progress + '%';
-                        // progressBar.setAttribute('aria-valuenow', progress);
-                        // progressBar.textContent = `${Math.round(progress)}%`;
-                        // statusText.textContent = `Uploading: ${Math.round(progress)}%`;
+                        progressBar.style.width = progress + '%';
+                        progressBar.setAttribute('aria-valuenow', progress);
+                        progressBar.textContent = `${Math.round(progress)}%`;
+                        statusText.textContent = `Uploading: ${Math.round(progress)}%`;
                     },
                     (error) => {
                         console.error("Upload error for", fileName, error);
-                        // statusText.textContent = `Error: ${error.message}`;
-                        // progressBar.classList.remove('bg-info');
-                        // progressBar.classList.add('bg-danger');
+                        statusText.textContent = `Error: ${error.message}`;
+                        progressBar.classList.remove('bg-info');
+                        progressBar.classList.add('bg-danger');
                         uploadSuccess = false;
                         reject(error);
                     },
@@ -262,9 +262,9 @@ productForm.addEventListener('submit', async (e) => {
                         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                         uploadedImageUrls.push(downloadURL);
                         console.log(`Upload of ${fileName} complete! Download URL: ${downloadURL}`);
-                        // statusText.textContent = `Complete!`;
-                        // progressBar.classList.remove('bg-info');
-                        // progressBar.classList.add('bg-success');
+                        statusText.textContent = `Complete!`;
+                        progressBar.classList.remove('bg-info');
+                        progressBar.classList.add('bg-success');
                         resolve();
                     }
                 );
@@ -290,6 +290,7 @@ productForm.addEventListener('submit', async (e) => {
             timestamp: serverTimestamp() // Set server timestamp
         };
 
+        // Ensure Firestore path matches your application's structure
         const docRef = await addDoc(collection(db, `artifacts/${appId}/public/data/products`), productData);
         console.log("Document written with ID: ", docRef.id);
 
@@ -472,28 +473,28 @@ editProductForm.addEventListener('submit', async (e) => {
     for (let i = 0; i < newImages.length; i++) {
         const file = newImages[i];
         const fileName = file.name;
-        const storagePath = `product_images/${Date.now()}_${fileName}`;
+        const storagePath = `product_images/${Date.now()}_${fileName}`; // Ensure this matches rules for new uploads
         const storageRef = ref(storage, storagePath);
         const uploadTask = uploadBytesResumable(storageRef, file);
 
-        // Temporarily commented out progress bar UI updates for debugging
-        // const { progressBar, statusText } = createProgressBar(fileName, editProgressBarArea);
+        // Re-enabling progress bar UI updates
+        const { progressBar, statusText } = createProgressBar(fileName, editProgressBarArea);
 
         await new Promise((resolve, reject) => {
             uploadTask.on('state_changed',
                 (snapshot) => {
                     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                     console.log(`Upload of new image ${fileName} is ${Math.round(progress)}% done`);
-                    // progressBar.style.width = progress + '%';
-                    // progressBar.setAttribute('aria-valuenow', progress);
-                    // progressBar.textContent = `${Math.round(progress)}%`;
-                    // statusText.textContent = `Uploading new image: ${Math.round(progress)}%`;
+                    progressBar.style.width = progress + '%';
+                    progressBar.setAttribute('aria-valuenow', progress);
+                    progressBar.textContent = `${Math.round(progress)}%`;
+                    statusText.textContent = `Uploading new image: ${Math.round(progress)}%`;
                 },
                 (error) => {
                     console.error("New image upload error:", fileName, error);
-                    // statusText.textContent = `Error: ${error.message}`;
-                    // progressBar.classList.remove('bg-info');
-                    // progressBar.classList.add('bg-danger');
+                    statusText.textContent = `Error: ${error.message}`;
+                    progressBar.classList.remove('bg-info');
+                    progressBar.classList.add('bg-danger');
                     newUploadSuccess = false;
                     reject(error);
                 },
@@ -501,9 +502,9 @@ editProductForm.addEventListener('submit', async (e) => {
                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                     updatedImageUrls.push(downloadURL); // Add new URL to the list
                     console.log(`Upload of new image ${fileName} complete! Download URL: ${downloadURL}`);
-                    // statusText.textContent = `Complete!`;
-                    // progressBar.classList.remove('bg-info');
-                    // progressBar.classList.add('bg-success');
+                    statusText.textContent = `Complete!`;
+                    progressBar.classList.remove('bg-info');
+                    progressBar.classList.add('bg-success');
                     resolve();
                 }
             );
