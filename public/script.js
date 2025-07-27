@@ -236,32 +236,35 @@ productForm.addEventListener('submit', async (e) => {
             const storageRef = ref(storage, storagePath);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
-            const { progressBar, statusText } = createProgressBar(fileName, progressBarArea);
+            // Temporarily comment out progress bar UI updates for debugging
+            // const { progressBar, statusText } = createProgressBar(fileName, progressBarArea);
 
             // Listen for state changes, errors, and completion of the upload.
             await new Promise((resolve, reject) => {
                 uploadTask.on('state_changed',
                     (snapshot) => {
                         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        progressBar.style.width = progress + '%';
-                        progressBar.setAttribute('aria-valuenow', progress);
-                        progressBar.textContent = `${Math.round(progress)}%`;
-                        statusText.textContent = `Uploading: ${Math.round(progress)}%`;
+                        console.log(`Upload of ${fileName} is ${Math.round(progress)}% done`);
+                        // progressBar.style.width = progress + '%';
+                        // progressBar.setAttribute('aria-valuenow', progress);
+                        // progressBar.textContent = `${Math.round(progress)}%`;
+                        // statusText.textContent = `Uploading: ${Math.round(progress)}%`;
                     },
                     (error) => {
                         console.error("Upload error for", fileName, error);
-                        statusText.textContent = `Error: ${error.message}`;
-                        progressBar.classList.remove('bg-info');
-                        progressBar.classList.add('bg-danger');
+                        // statusText.textContent = `Error: ${error.message}`;
+                        // progressBar.classList.remove('bg-info');
+                        // progressBar.classList.add('bg-danger');
                         uploadSuccess = false;
                         reject(error);
                     },
                     async () => {
                         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                         uploadedImageUrls.push(downloadURL);
-                        statusText.textContent = `Complete!`;
-                        progressBar.classList.remove('bg-info');
-                        progressBar.classList.add('bg-success');
+                        console.log(`Upload of ${fileName} complete! Download URL: ${downloadURL}`);
+                        // statusText.textContent = `Complete!`;
+                        // progressBar.classList.remove('bg-info');
+                        // progressBar.classList.add('bg-success');
                         resolve();
                     }
                 );
@@ -473,31 +476,34 @@ editProductForm.addEventListener('submit', async (e) => {
         const storageRef = ref(storage, storagePath);
         const uploadTask = uploadBytesResumable(storageRef, file);
 
-        const { progressBar, statusText } = createProgressBar(fileName, editProgressBarArea);
+        // Temporarily comment out progress bar UI updates for debugging
+        // const { progressBar, statusText } = createProgressBar(fileName, editProgressBarArea);
 
         await new Promise((resolve, reject) => {
             uploadTask.on('state_changed',
                 (snapshot) => {
                     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    progressBar.style.width = progress + '%';
-                    progressBar.setAttribute('aria-valuenow', progress);
-                    progressBar.textContent = `${Math.round(progress)}%`;
-                    statusText.textContent = `Uploading new image: ${Math.round(progress)}%`;
+                    console.log(`Upload of new image ${fileName} is ${Math.round(progress)}% done`);
+                    // progressBar.style.width = progress + '%';
+                    // progressBar.setAttribute('aria-valuenow', progress);
+                    // progressBar.textContent = `${Math.round(progress)}%`;
+                    // statusText.textContent = `Uploading new image: ${Math.round(progress)}%`;
                 },
                 (error) => {
                     console.error("New image upload error:", fileName, error);
-                    statusText.textContent = `Error: ${error.message}`;
-                    progressBar.classList.remove('bg-info');
-                    progressBar.classList.add('bg-danger');
+                    // statusText.textContent = `Error: ${error.message}`;
+                    // progressBar.classList.remove('bg-info');
+                    // progressBar.classList.add('bg-danger');
                     newUploadSuccess = false;
                     reject(error);
                 },
                 async () => {
                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                     updatedImageUrls.push(downloadURL); // Add new URL to the list
-                    statusText.textContent = `Complete!`;
-                    progressBar.classList.remove('bg-info');
-                    progressBar.classList.add('bg-success');
+                    console.log(`Upload of new image ${fileName} complete! Download URL: ${downloadURL}`);
+                    // statusText.textContent = `Complete!`;
+                    // progressBar.classList.remove('bg-info');
+                    // progressBar.classList.add('bg-success');
                     resolve();
                 }
             );
